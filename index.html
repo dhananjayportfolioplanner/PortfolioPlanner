@@ -20,7 +20,7 @@ header h1 span{color:var(--gold)}
 .tabs{display:flex;gap:4px}
 .tab{padding:8px 20px;border:1px solid rgba(255,255,255,0.2);border-radius:20px;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.7);transition:all 0.3s;background:transparent;font-weight:500}
 .tab:hover{background:rgba(255,255,255,0.1);color:#fff}
-.tab.active{background:var(--gold);color:var(--navy);border-color:var(--gold);font-weight:600}
+.tab.active{background:#111;color:#fff;border-color:#333;font-weight:600}
 .model-section{display:none;padding:20px;max-width:1400px;margin:0 auto}
 .model-section.active{display:block}
 .model-header{text-align:center;margin-bottom:24px}
@@ -32,7 +32,7 @@ header h1 span{color:var(--gold)}
 .panel-title{background:var(--navy);color:#fff;padding:10px 16px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;gap:8px}
 .panel-title.finance{background:#c0392b}
 .panel-title.invest{background:#2980b9}
-.panel-title.rental-title{background:#27ae60}
+.panel-title.rental-title{background:#1a5632}
 .panel-body{padding:16px}
 .input-group{margin-bottom:12px}
 .input-group label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px}
@@ -94,6 +94,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 .color-finance{color:var(--red)}
 .color-invest{color:var(--blue)}
 .color-rental{color:var(--green)}
+.email-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:200;justify-content:center;align-items:center}
+.email-box{background:#fff;border-radius:12px;padding:32px;max-width:400px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+.email-box h3{font-size:18px;color:var(--navy);margin-bottom:6px}
+.email-box p{font-size:13px;color:var(--text2);margin-bottom:20px}
+.email-box input[type=email]{width:100%;padding:12px;border:2px solid var(--border);border-radius:6px;font-size:15px;margin-bottom:6px}
+.email-box input[type=email]:focus{border-color:var(--gold);outline:none}
+.email-err{color:var(--red);font-size:12px;min-height:16px;margin-bottom:12px}
 </style>
 </head>
 <body>
@@ -438,6 +445,16 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   <button class="btn btn-gold" onclick="exportExcel(0)" style="background:var(--navy);color:var(--gold)">&#128190; Export All</button>
 </div>
 
+<div class="email-overlay" id="emailOverlay">
+  <div class="email-box">
+    <h3>&#128190; Download Excel Report</h3>
+    <p>Please enter your email address to download</p>
+    <input type="email" id="dlEmail" placeholder="your@email.com" onkeydown="if(event.key==='Enter')submitDlEmail()">
+    <div class="email-err" id="dlEmailErr"></div>
+    <button class="btn btn-gold" onclick="submitDlEmail()" style="width:100%;justify-content:center">Download Now</button>
+  </div>
+</div>
+
 <script>
 const v=id=>parseFloat(document.getElementById(id).value)||0;
 const fmtN=n=>n.toLocaleString('en-US',{maximumFractionDigits:0});
@@ -666,7 +683,7 @@ function calcModel1(){
     </tbody></table></div></div>`;
 
   // B. Hold-to-Completion
-  html+=`<div class="panel results-section"><div class="panel-title" style="background:#2c7a4b">B. Hold-to-Completion Strategy</div><div class="panel-body">
+  html+=`<div class="panel results-section"><div class="panel-title" style="background:#1a2332">B. Hold-to-Completion Strategy</div><div class="panel-body">
     <div class="summary-cards" style="margin-bottom:16px">
       <div class="s-card"><div class="label">Loan Amount</div><div class="value">${fmt(loanAmt)}</div></div>
       <div class="s-card"><div class="label">Monthly EMI</div><div class="value">${fmt(emi)}</div></div>
@@ -1298,8 +1315,39 @@ function calcModel3(){
   window.m3Data={s1Data,s2Data,s1Profit,s2Profit,discPrice,sellPrice,totalConsCost,s1TotalInterest,s2TotalInterest,toEquity,eqBalance,s1ROI,s2ROI,maxDiscount,emi,emi2,loanNeeded,s2LoanNeeded,s1Outstanding,s1TotalEMI,totalWithdrawnS1};
 }
 
-// ===================== EXCEL EXPORT =====================
-function exportExcel(modelNum){
+// ===================== EMAIL GATE + EXCEL EXPORT =====================
+const EMAIL_LOG_URL='';
+let _pendingModel=null;
+
+function exportExcel(m){
+  const e=localStorage.getItem('calc_dl_email');
+  if(!e){
+    _pendingModel=m;
+    document.getElementById('emailOverlay').style.display='flex';
+    setTimeout(()=>document.getElementById('dlEmail').focus(),100);
+    return;
+  }
+  if(EMAIL_LOG_URL){
+    fetch(EMAIL_LOG_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({email:e,model:m,time:new Date().toISOString()})}).catch(()=>{});
+  }
+  _doExport(m);
+}
+
+function submitDlEmail(){
+  const inp=document.getElementById('dlEmail');
+  const e=inp.value.trim();
+  const err=document.getElementById('dlEmailErr');
+  if(!e||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){err.textContent='Please enter a valid email address';return;}
+  err.textContent='';
+  localStorage.setItem('calc_dl_email',e);
+  document.getElementById('emailOverlay').style.display='none';
+  exportExcel(_pendingModel);
+}
+
+document.getElementById('emailOverlay').addEventListener('click',function(ev){if(ev.target===this)this.style.display='none'});
+document.addEventListener('keydown',function(ev){if(ev.key==='Escape')document.getElementById('emailOverlay').style.display='none'});
+
+function _doExport(modelNum){
   const wb=XLSX.utils.book_new();
 
   if(modelNum===0||modelNum===1){
