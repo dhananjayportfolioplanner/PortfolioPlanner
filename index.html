@@ -91,6 +91,27 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 .total-row td{color:#fff!important;border-bottom:none}
 .currency-note{text-align:center;font-size:11px;color:var(--text2);margin-bottom:12px;display:none}
 .currency-note.show{display:block}
+.ls-hero{background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:var(--radius);padding:20px;text-align:center;margin-bottom:16px;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,0.15)}
+.ls-hero .label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.6);margin-bottom:4px}
+.ls-hero .value{font-size:28px;font-weight:700;color:var(--gold2);letter-spacing:0.5px}
+.ls-hero .sub{font-size:11px;color:rgba(255,255,255,0.5);margin-top:6px}
+.ls-primary{background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.15));border:2px solid var(--gold);border-radius:var(--radius);padding:14px;margin-bottom:14px}
+.ls-primary label{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px;display:block}
+.ls-primary input{font-size:16px;font-weight:700;padding:8px 10px;border:2px solid var(--gold);background:#fff;border-radius:4px;width:100%}
+.ls-primary .derived{font-size:12px;color:var(--text2);margin-top:5px}
+.ls-primary .derived strong{color:var(--navy)}
+.ls-add-row{display:grid;grid-template-columns:60px 90px 1fr 28px;gap:4px;align-items:center;margin-bottom:5px}
+.ls-add-row select,.ls-add-row input{padding:5px 6px;font-size:12px;border:1px solid var(--border);border-radius:4px;background:var(--input-bg)}
+.ls-rm{width:24px;height:24px;border:none;background:var(--red);color:#fff;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;line-height:1}
+.ls-rm:hover{background:#c0392b}
+.ls-add-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:var(--blue);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;margin-top:3px}
+.ls-add-btn:hover{background:#2980b9}
+.ls-view-toggle{display:flex;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:10px;width:fit-content}
+.ls-view-btn{padding:5px 14px;font-size:12px;cursor:pointer;background:#fff;border:none;color:var(--text2);font-weight:600;transition:all 0.2s}
+.ls-view-btn.active{background:var(--navy);color:#fff}
+.return-row{background:rgba(39,174,96,0.08)!important;font-weight:600}
+.return-row td{border-bottom:2px solid var(--gold)}
+.deferral-row{background:rgba(52,152,219,0.06)!important;font-style:italic;color:var(--text2)}
 .color-finance{color:var(--red)}
 .color-invest{color:var(--blue)}
 .color-rental{color:var(--green)}
@@ -116,6 +137,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
       <div class="tab active" onclick="switchModel(1)">Model 1</div>
       <div class="tab" onclick="switchModel(2)">Model 2</div>
       <div class="tab" onclick="switchModel(3)">Model 3</div>
+      <div class="tab" onclick="switchModel(4)">Lump Sum</div>
     </div>
   </div>
 </header>
@@ -438,10 +460,61 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   </div>
 </section>
 
+<!-- ==================== MODEL 4: LUMP SUM ==================== -->
+<section id="model4" class="model-section">
+  <div class="model-header">
+    <h2>Lump Sum Investment Calculator</h2>
+    <p>Compute the initial investment required to support quarterly withdrawals over time</p>
+    <div class="currency-note" id="cn4">All inputs in AED. Displayed values converted at 1 USD = 3.6725 AED</div>
+  </div>
+  <div class="grid">
+    <div>
+      <div class="panel" style="position:sticky;top:70px;max-height:calc(100vh - 90px);overflow-y:auto">
+        <div class="panel-title" style="background:linear-gradient(135deg,#8B6914,#B8860B)">Input Parameters</div>
+        <div class="panel-body">
+          <div class="ls-primary">
+            <label>Quarterly Withdrawal Amount (in advance)</label>
+            <input type="number" id="m4_quarterlyW" value="50000" step="1000" onchange="calcModel4()" oninput="m4UpdateDerived()">
+            <div class="derived">Annual Requirement: <strong id="m4_annualDerived">200,000</strong></div>
+          </div>
+          <div class="input-group">
+            <label>Annual Rate of Return</label>
+            <div class="range-row">
+              <input type="range" id="m4_returnRate" min="1" max="40" value="20" step="0.5" oninput="document.getElementById('m4_rrVal').textContent=this.value+'%';calcModel4()">
+              <span class="range-val" id="m4_rrVal">20%</span>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Growth Period Before Withdrawals</label>
+            <div class="range-row">
+              <input type="range" id="m4_deferral" min="0" max="10" value="0" oninput="document.getElementById('m4_defVal').textContent=this.value==='0'?'None':this.value+' yr'+(this.value>1?'s':'');m4OnDurationChange()">
+              <span class="range-val" id="m4_defVal">None</span>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Withdrawal Duration (Years)</label>
+            <div class="range-row">
+              <input type="range" id="m4_duration" min="1" max="30" value="10" oninput="document.getElementById('m4_durVal').textContent=this.value+' yrs';m4OnDurationChange()">
+              <span class="range-val" id="m4_durVal">10 yrs</span>
+            </div>
+          </div>
+          <div class="section-label">Additional Investments (Top-Ups)</div>
+          <div id="m4_addInvList"></div>
+          <button class="ls-add-btn" onclick="m4AddInvRow()">+ Add Top-Up</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div id="m4_results"></div>
+    </div>
+  </div>
+</section>
+
 <div class="export-bar">
   <button class="btn btn-gold" onclick="exportExcel(1)">&#128190; Export Model 1</button>
   <button class="btn btn-blue" onclick="exportExcel(2)">&#128190; Export Model 2</button>
   <button class="btn btn-green" onclick="exportExcel(3)">&#128190; Export Model 3</button>
+  <button class="btn btn-gold" onclick="exportExcel(4)" style="background:#8B6914;color:#fff">&#128190; Export Lump Sum</button>
   <button class="btn btn-gold" onclick="exportExcel(0)" style="background:var(--navy);color:var(--gold)">&#128190; Export All</button>
 </div>
 
@@ -468,7 +541,7 @@ function setCurrency(c){
   document.querySelectorAll('.currency-btn').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.currency-btn').forEach(b=>{if(b.textContent===c)b.classList.add('active')});
   document.querySelectorAll('.currency-note').forEach(n=>n.classList.toggle('show',c==='USD'));
-  calcModel1();calcModel2();calcModel3();
+  calcModel1();calcModel2();calcModel3();calcModel4();
 }
 
 function fmt(n){
@@ -1463,7 +1536,250 @@ function _doExport(modelNum){
     }
   }
 
-  XLSX.writeFile(wb,modelNum===0?'All_Models.xlsx':'Model_'+modelNum+'.xlsx');
+  if(modelNum===4||modelNum===0){
+    if(window.m4Data){
+      const d=window.m4Data;
+      const sData=[['Lump Sum Investment Calculator'],[],
+        ['Quarterly Withdrawal (AED)',Math.round(d.W)],
+        ['Annual Withdrawal (AED)',Math.round(d.W*4)],
+        ['Annual Rate of Return',(d.r*100).toFixed(1)+'%'],
+        ['Growth Period (Years)',d.deferYrs],
+        ['Withdrawal Duration (Years)',d.wdYrs],
+        ['Total Horizon (Years)',d.deferYrs+d.wdYrs],[],
+        ['Required Lump Sum (AED)',Math.round(d.lumpSum)],
+        ['Total Withdrawals (AED)',Math.round(d.sim.totalW)],
+        ['Total Top-Ups (AED)',Math.round(d.sim.totalAdd)],
+        ['Total Returns (AED)',Math.round(d.sim.totalRet)],
+        ['Final Balance (AED)',Math.round(Math.max(0,d.sim.finalBalance))]
+      ];
+      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sData),'LumpSum Summary');
+      const qData=[['Year','Quarter','Phase','Opening','Withdrawal','Top-Up','Closing','Return','Year-End']];
+      for(const r of d.sim.rows){
+        qData.push([r.year,M4_QLbls[r.quarter-1],r.isDeferral?'Growth':'Withdrawal',
+          Math.round(r.opening),Math.round(r.withdrawal),r.topup||0,Math.round(r.closing),
+          r.returnAmt!==undefined?Math.round(r.returnAmt):'',
+          r.yearEnd!==undefined?Math.round(r.yearEnd):'']);
+      }
+      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(qData),'LumpSum Quarterly');
+    }
+  }
+
+  const fname=modelNum===0?'All_Models.xlsx':modelNum===4?'LumpSum_Calculator.xlsx':'Model_'+modelNum+'.xlsx';
+  XLSX.writeFile(wb,fname);
+}
+
+// ===================== MODEL 4: LUMP SUM =====================
+const M4_QLbls=['Q1 (Jan)','Q2 (Apr)','Q3 (Jul)','Q4 (Oct)'];
+let m4AddInvs=[];
+let m4AddCtr=0;
+
+function m4UpdateDerived(){
+  const w=parseFloat(document.getElementById('m4_quarterlyW').value)||0;
+  document.getElementById('m4_annualDerived').textContent=(w*4).toLocaleString('en-US');
+}
+
+function m4AddInvRow(){
+  m4AddCtr++;
+  m4AddInvs.push({id:m4AddCtr,year:1,quarter:1,amount:0});
+  m4RenderInvList();
+}
+
+function m4RemoveInv(id){
+  m4AddInvs=m4AddInvs.filter(a=>a.id!==id);
+  m4RenderInvList();
+  calcModel4();
+}
+
+function m4UpdateInv(id,field,val){
+  const inv=m4AddInvs.find(a=>a.id===id);
+  if(!inv)return;
+  inv[field]=field==='amount'?(parseFloat(val)||0):parseInt(val);
+  calcModel4();
+}
+
+function m4RenderInvList(){
+  const d=parseInt(document.getElementById('m4_deferral').value)||0;
+  const wd=parseInt(document.getElementById('m4_duration').value)||1;
+  const total=d+wd;
+  const el=document.getElementById('m4_addInvList');
+  let h='';
+  for(const inv of m4AddInvs){
+    h+=`<div class="ls-add-row">
+      <select onchange="m4UpdateInv(${inv.id},'year',this.value)">
+        ${Array.from({length:total},(_,i)=>`<option value="${i+1}"${inv.year===i+1?' selected':''}>Y${i+1}</option>`).join('')}
+      </select>
+      <select onchange="m4UpdateInv(${inv.id},'quarter',this.value)">
+        ${[1,2,3,4].map(q=>`<option value="${q}"${inv.quarter===q?' selected':''}>${M4_QLbls[q-1]}</option>`).join('')}
+      </select>
+      <input type="number" value="${inv.amount||''}" placeholder="Amount" onchange="m4UpdateInv(${inv.id},'amount',this.value)">
+      <button class="ls-rm" onclick="m4RemoveInv(${inv.id})">&times;</button>
+    </div>`;
+  }
+  el.innerHTML=h;
+}
+
+function m4OnDurationChange(){
+  const d=parseInt(document.getElementById('m4_deferral').value)||0;
+  const wd=parseInt(document.getElementById('m4_duration').value)||1;
+  const total=d+wd;
+  m4AddInvs=m4AddInvs.filter(a=>a.year<=total);
+  m4RenderInvList();
+  calcModel4();
+}
+
+function m4GetTopup(y,q,additions){
+  let t=0;
+  for(const a of additions)if(a.year===y&&a.quarter===q)t+=a.amount;
+  return t;
+}
+
+function m4Simulate(lumpSum,W,r,deferYrs,wdYrs,additions){
+  let bal=lumpSum;
+  let totalW=0,totalAdd=0,totalRet=0;
+  let rows=[];
+  const totalYrs=deferYrs+wdYrs;
+  for(let y=1;y<=totalYrs;y++){
+    const isWD=y>deferYrs;
+    for(let q=1;q<=4;q++){
+      const opening=bal;
+      const wd=isWD?W:0;
+      bal-=wd;totalW+=wd;
+      const topup=m4GetTopup(y,q,additions);
+      bal+=topup;totalAdd+=topup;
+      const row={year:y,quarter:q,opening,withdrawal:wd,topup,closing:bal,isDeferral:!isWD};
+      if(q===4){
+        const ret=bal*r;
+        bal+=ret;totalRet+=ret;
+        row.returnAmt=ret;row.yearEnd=bal;
+      }
+      rows.push(row);
+    }
+  }
+  return{rows,finalBalance:bal,totalW,totalAdd,totalRet};
+}
+
+function m4FindLumpSum(W,r,deferYrs,wdYrs,additions){
+  if(W<=0)return 0;
+  const s0=m4Simulate(0,W,r,deferYrs,wdYrs,additions);
+  const s1=m4Simulate(1,W,r,deferYrs,wdYrs,additions);
+  let maxL=0;
+  for(let i=0;i<s0.rows.length;i++){
+    const b=s0.rows[i].closing;
+    const a=s1.rows[i].closing-b;
+    if(a>0&&b<0)maxL=Math.max(maxL,-b/a);
+    if(s0.rows[i].yearEnd!==undefined){
+      const bY=s0.rows[i].yearEnd;
+      const aY=s1.rows[i].yearEnd-bY;
+      if(aY>0&&bY<0)maxL=Math.max(maxL,-bY/aY);
+    }
+  }
+  return maxL;
+}
+
+function calcModel4(){
+  const W=parseFloat(document.getElementById('m4_quarterlyW').value)||0;
+  const r=(parseFloat(document.getElementById('m4_returnRate').value)||0)/100;
+  const deferYrs=parseInt(document.getElementById('m4_deferral').value)||0;
+  const wdYrs=parseInt(document.getElementById('m4_duration').value)||1;
+  const additions=m4AddInvs.filter(a=>a.amount>0);
+  m4UpdateDerived();
+
+  const lumpSum=m4FindLumpSum(W,r,deferYrs,wdYrs,additions);
+  const sim=m4Simulate(lumpSum,W,r,deferYrs,wdYrs,additions);
+  const totalYrs=deferYrs+wdYrs;
+
+  const el=document.getElementById('m4_results');
+  let h='';
+
+  h+=`<div class="ls-hero">
+    <div class="label">Required Initial Lump Sum Investment</div>
+    <div class="value">${fmt(lumpSum)}</div>
+    <div class="sub">To support ${fmt(W)} quarterly withdrawals for ${wdYrs} yr${wdYrs>1?'s':''}${deferYrs>0?' (after '+deferYrs+' yr growth period)':''} at ${(r*100).toFixed(1)}% return</div>
+  </div>`;
+
+  h+=`<div class="summary-cards">
+    <div class="s-card red"><div class="label">Total Withdrawals</div><div class="value">${fmt(sim.totalW)}</div><div class="sub">${wdYrs*4} quarters</div></div>
+    <div class="s-card blue"><div class="label">Total Top-Ups</div><div class="value">${fmt(sim.totalAdd)}</div><div class="sub">${additions.length} investment${additions.length!==1?'s':''}</div></div>
+    <div class="s-card green"><div class="label">Returns Earned</div><div class="value">${fmt(sim.totalRet)}</div><div class="sub">${(r*100).toFixed(1)}% compounded</div></div>
+    <div class="s-card orange"><div class="label">Final Balance</div><div class="value">${fmt(Math.max(0,sim.finalBalance))}</div><div class="sub">After ${totalYrs} yr${totalYrs>1?'s':''}</div></div>
+  </div>`;
+
+  h+=`<div class="chart-container"><canvas id="m4_chart"></canvas></div>`;
+
+  h+=`<div class="panel"><div class="panel-title" style="background:linear-gradient(135deg,#8B6914,#B8860B)">Breakdown</div><div class="panel-body">`;
+  h+=`<div class="ls-view-toggle">
+    <button class="ls-view-btn active" onclick="m4ToggleView('yearly',this)">Yearly Summary</button>
+    <button class="ls-view-btn" onclick="m4ToggleView('quarterly',this)">Quarterly Detail</button>
+  </div>`;
+
+  h+=`<div id="m4_yearlyView"><div class="amort-table"><table>
+    <thead><tr><th>Year</th><th>Phase</th><th class="num">Opening</th><th class="num">Withdrawals</th><th class="num">Top-Ups</th><th class="num">Before Return</th><th class="num">Return</th><th class="num">Closing</th></tr></thead><tbody>`;
+  for(let y=1;y<=totalYrs;y++){
+    const yRows=sim.rows.filter(r=>r.year===y);
+    const opening=yRows[0].opening;
+    const tW=yRows.reduce((s,r)=>s+r.withdrawal,0);
+    const tA=yRows.reduce((s,r)=>s+r.topup,0);
+    const bRet=yRows[3].closing;
+    const retAmt=yRows[3].returnAmt||0;
+    const yearEnd=yRows[3].yearEnd||bRet;
+    const phase=y<=deferYrs?'Growth':'Withdrawal';
+    h+=`<tr${y===totalYrs?' class="highlight-row"':''}${y<=deferYrs?' class="deferral-row"':''}>
+      <td><strong>Year ${y}</strong></td>
+      <td>${phase}</td>
+      <td class="num">${fmtN(opening)}</td>
+      <td class="num">${tW>0?'<span class="neg">'+fmtN(tW)+'</span>':'-'}</td>
+      <td class="num">${tA>0?'<span class="pos">'+fmtN(tA)+'</span>':'-'}</td>
+      <td class="num">${fmtN(bRet)}</td>
+      <td class="num"><span class="pos">${fmtN(retAmt)}</span></td>
+      <td class="num"><strong>${fmtN(yearEnd)}</strong></td>
+    </tr>`;
+  }
+  h+=`</tbody></table></div></div>`;
+
+  h+=`<div id="m4_quarterlyView" style="display:none"><div class="amort-table"><table>
+    <thead><tr><th>Period</th><th class="num">Opening</th><th class="num">Withdrawal</th><th class="num">Top-Up</th><th class="num">Closing</th></tr></thead><tbody>`;
+  for(let i=0;i<sim.rows.length;i++){
+    const r=sim.rows[i];
+    if(r.quarter===1){
+      const phase=r.isDeferral?'(Growth)':'(Withdrawal)';
+      h+=`<tr class="year-header-row"><td colspan="5" style="background:var(--navy);color:#fff;font-weight:700">Year ${r.year} ${phase}</td></tr>`;
+    }
+    h+=`<tr${r.isDeferral?' class="deferral-row"':''}>
+      <td>&nbsp;&nbsp;${M4_QLbls[r.quarter-1]}</td>
+      <td class="num">${fmtN(r.opening)}</td>
+      <td class="num">${r.withdrawal>0?'<span class="neg">'+fmtN(r.withdrawal)+'</span>':'-'}</td>
+      <td class="num">${r.topup>0?'<span class="pos">'+fmtN(r.topup)+'</span>':'-'}</td>
+      <td class="num">${fmtN(r.closing)}</td></tr>`;
+    if(r.quarter===4){
+      h+=`<tr class="return-row"><td>&nbsp;&nbsp;Annual Return (${(parseFloat(document.getElementById('m4_returnRate').value)).toFixed(1)}%)</td>
+        <td class="num" colspan="3"></td>
+        <td class="num"><span class="pos">${fmtN(r.yearEnd)}</span></td></tr>`;
+    }
+  }
+  h+=`</tbody></table></div></div></div></div>`;
+
+  el.innerHTML=h;
+
+  // Chart
+  const labels=[];const data=[];
+  const cv=currency==='USD'?USDRATE:1;
+  for(const r of sim.rows){
+    labels.push(r.quarter===1?'Y'+r.year:'');
+    data.push(Math.round((r.quarter===4?(r.yearEnd||r.closing):r.closing)/cv));
+  }
+  renderChart('m4_chart','line',{
+    labels,
+    datasets:[{label:'Portfolio Balance',data,borderColor:'#c9a84c',backgroundColor:'rgba(201,168,76,0.12)',fill:true,tension:0.3,pointRadius:totalYrs<=12?3:1,pointBackgroundColor:'#c9a84c',borderWidth:2}]
+  },{plugins:{legend:{display:false}}});
+
+  window.m4Data={lumpSum,sim,W,r,deferYrs,wdYrs,additions};
+}
+
+function m4ToggleView(v,btn){
+  document.getElementById('m4_yearlyView').style.display=v==='yearly'?'':'none';
+  document.getElementById('m4_quarterlyView').style.display=v==='quarterly'?'':'none';
+  document.querySelectorAll('.ls-view-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
 }
 
 // ===================== INIT =====================
@@ -1473,6 +1789,7 @@ m3BuildInputs();
 calcModel1();
 calcModel2();
 calcModel3();
+calcModel4();
 </script>
 </body>
 </html>
